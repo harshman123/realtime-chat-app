@@ -1,106 +1,90 @@
-const express = require("express")
-const cors = require("cors")
-const dotenv = require("dotenv")
-const http = require("http")
-const Message = require("./models/Message")
+const dns = require("node:dns");
 
-const { Server } = require("socket.io")
+// Force Node.js to use public DNS servers
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
-const connectDB = require("./config/db")
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const http = require("http");
+const { Server } = require("socket.io");
 
-dotenv.config()
+const Message = require("./models/Message");
+const connectDB = require("./config/db");
 
-connectDB()
+dotenv.config();
 
-const app = express()
+// Connect Database
+connectDB();
 
-// CREATE HTTP SERVER
-const server = http.createServer(app)
+const app = express();
 
-// CREATE SOCKET SERVER
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Create HTTP Server
+const server = http.createServer(app);
+
+// Create Socket.IO Server
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:5173",
     methods: ["GET", "POST"],
   },
-})
+});
 
-app.use(cors())
-app.use(express.json())
-
-// ROUTES
-app.use("/api/auth", require("./routes/authRoutes"))
-
-app.use("/api/messages", require("./routes/messageRoutes"))
+// Routes
+app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/messages", require("./routes/messageRoutes"));
 
 app.get("/", (req, res) => {
-  res.send("API Running")
-})
+  res.send("API Running");
+});
 
-let onlineUsers = []
+// Store online users
+let onlineUsers = [];
 
-// SOCKET CONNECTION
-// io.on("connection", (socket) => {
-//   console.log("User Connected:", socket.id)
-
-//   socket.on("send_message", async (data) => {
-//   try {
-//     // SAVE MESSAGE
-//     const message = await Message.create({
-//       sender: data.sender,
-//       text: data.text,
-//     })
-
-//     // SEND TO ALL USERS
-//     io.emit("receive_message", message)
-//   } catch (error) {
-//     console.log(error)
-//   }
-//   })
-
-
-//   // DISCONNECT
-//   socket.on("disconnect", () => {
-//     console.log("User Disconnected", socket.id)
-//   })
-// })
-
+// Socket Connection
 io.on("connection", (socket) => {
-  console.log("User Connected:", socket.id)
+  console.log("User Connected:", socket.id);
 
-  // ADD USER
+  // User joins
   socket.on("join", (username) => {
-    onlineUsers.push(username)
+    if (!onlineUsers.includes(username)) {
+      onlineUsers.push(username);
+    }
 
-    io.emit("online_users", onlineUsers)
-  })
+    io.emit("online_users", onlineUsers);
+  });
 
-  // SEND MESSAGE
+  // Send Message
   socket.on("send_message", async (data) => {
     try {
       const message = await Message.create({
         sender: data.sender,
         text: data.text,
-      })
+      });
 
-      io.emit("receive_message", message)
+      io.emit("receive_message", message);
     } catch (error) {
-      console.log(error)
+      console.error("Message Error:", error);
     }
-  })
+  });
 
-  // DISCONNECT
+  // Disconnect
   socket.on("disconnect", () => {
-    console.log("User Disconnected")
+    console.log("User Disconnected:", socket.id);
 
-    onlineUsers.pop()
+    onlineUsers = onlineUsers.filter((_, index) => index !== onlineUsers.length - 1);
 
-    io.emit("online_users", onlineUsers)
-  })
-})
+    io.emit("online_users", onlineUsers);
+  });
+});
 
-const PORT = process.env.PORT || 5000
+// Start Server
+const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
-})
+  console.log(`Server running on port ${PORT}`);
+});
