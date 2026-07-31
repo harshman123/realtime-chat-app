@@ -1,5 +1,6 @@
 const { Server } = require("socket.io");
-const Message = require("../models/Message");
+// const Message = require("../models/Message");
+const { saveMessage } = require("../controllers/messageController");
 
 const initializeSocket = (server) => {
   const io = new Server(server, {
@@ -22,10 +23,7 @@ const initializeSocket = (server) => {
     // send message
     socket.on("send_message", async (data) => {
       try {
-        const message = await Message.create({
-          sender: data.sender,
-          text: data.text,
-        });
+        const message = await saveMessage(data);
     
         io.emit("receive_message", message);
       } catch (error) {
@@ -48,3 +46,5 @@ const initializeSocket = (server) => {
 
   });
 };
+
+module.exports = initializeSocket;
