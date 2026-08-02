@@ -76,6 +76,15 @@ const loginUser = async (req, res) => {
   }
 }
 
+// GET ALL USERS EXCEPT LOGGED-IN USER
+const getUsers = async (req, res) => {
+  const users = await User.find({
+    _id: { $ne: req.user._id }
+  }).select("-password");
+
+  res.status(200).json(users);
+}
+
 // GET CURRENT USER
 const getMe = async (req, res) => {
   res.json(req.user)
@@ -85,4 +94,5 @@ module.exports = {
   registerUser,
   loginUser,
   getMe,
+  getUsers,
 }
