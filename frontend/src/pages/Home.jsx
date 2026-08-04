@@ -11,46 +11,13 @@ const Home = () => {
 
   const [onlineUsers, setOnlineUsers] = useState([])
 
+  const [users, setUsers] = useState([]);
+
   const user = JSON.parse(localStorage.getItem("user"))
   const messagesEndRef = useRef(null)
 
 
-  // RECEIVE MESSAGE
-  // useEffect(() => {
-  //   socket.on("receive_message", (data) => {
-  //     setMessages((prev) => [...prev, data])
-  //   })
 
-  //   return () => {
-  //     socket.off("receive_message")
-  //   }
-  // }, [])
-
-//   useEffect(() => {
-//   // LOAD OLD MESSAGES
-//   const fetchMessages = async () => {
-//     try {
-//       const response = await axios.get(
-//         "http://localhost:5000/api/messages"
-//       )
-
-//       setMessages(response.data)
-//     } catch (error) {
-//       console.log(error)
-//     }
-//   }
-
-//   fetchMessages()
-
-//   // RECEIVE NEW MESSAGES
-//   socket.on("receive_message", (data) => {
-//     setMessages((prev) => [...prev, data])
-//   })
-
-//   return () => {
-//     socket.off("receive_message")
-//   }
-// }, [])
 
   useEffect(() => {
   // LOAD OLD MESSAGES
@@ -68,8 +35,28 @@ const Home = () => {
 
   fetchMessages()
 
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:5000/api/auth/users",
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+  
+      setUsers(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  fetchUsers();
+
+
   // JOIN CHAT
-  socket.emit("join", user.name)
+  socket.emit("join", user._id)
 
   // ONLINE USERS
   socket.on("online_users", (users) => {
@@ -114,21 +101,31 @@ const Home = () => {
       </h1>
 
     <div className="mb-4">
-      <h2 className="font-bold mb-2">
-        Online Users
-      </h2>
+    <h2 className="font-bold mb-2">
+      Users
+    </h2>
 
-      <div className="flex gap-2 flex-wrap">
-        {onlineUsers.map((user, index) => (
-          <span
-            key={index}
-            className="bg-green-200 px-3 py-1 rounded-full"
-          >
-            {user}
-          </span>
-        ))}
+  <div className="space-y-2">
+    {users.map((chatUser) => (
+      <div
+        key={chatUser._id}
+        className="flex items-center justify-between p-3 rounded cursor-pointer hover:bg-gray-100"
+      >
+        <span className="font-medium">
+          {chatUser.name}
+        </span>
+
+        <span
+          className={`w-3 h-3 rounded-full ${
+            onlineUsers.includes(chatUser._id)
+              ? "bg-green-500"
+              : "bg-gray-400"
+          }`}
+        ></span>
       </div>
+        ))}
     </div>
+  </div>
 
 
       {/* MESSAGES */}
