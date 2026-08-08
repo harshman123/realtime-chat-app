@@ -1,20 +1,14 @@
-const express = require("express")
+const express = require("express");
 
-const Message = require("../models/Message")
+const router = express.Router();
 
-const router = express.Router()
+const { protect } = require("../middleware/authMiddleware");
 
-// GET ALL MESSAGES
-router.get("/", async (req, res) => {
-  try {
-    const messages = await Message.find()
+const {
+  getConversation,
+} = require("../controllers/messageController");
 
-    res.json(messages)
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    })
-  }
-})
+// GET CONVERSATION
+router.get("/:receiverId", protect, getConversation);
 
-module.exports = router
+module.exports = router;

@@ -25,7 +25,22 @@ const initializeSocket = (server) => {
       try {
         const message = await saveMessage(data);
     
-        io.emit("receive_message", message);
+        // io.emit("receive_message", message);
+
+        const receiverSocketId = onlineUsers.get(data.receiver);
+        const senderSocketId = onlineUsers.get(data.sender);
+
+        // Send to receiver
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit("receive_message", message);
+        }
+
+        // Send back to sender
+        if (senderSocketId) {
+          io.to(senderSocketId).emit("receive_message", message);
+        } 
+
+
       } catch (error) {
         console.error("Message Error:", error);
       }

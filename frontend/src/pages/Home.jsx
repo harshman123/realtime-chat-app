@@ -13,6 +13,8 @@ const Home = () => {
 
   const [users, setUsers] = useState([]);
 
+  const [selectedUser, setSelectedUser] = useState(null);
+
   const user = JSON.parse(localStorage.getItem("user"))
   const messagesEndRef = useRef(null)
 
@@ -20,20 +22,9 @@ const Home = () => {
 
 
   useEffect(() => {
-  // LOAD OLD MESSAGES
-  const fetchMessages = async () => {
-    try {
-      const response = await axios.get(
-        "http://localhost:5000/api/messages"
-      )
-
-      setMessages(response.data)
-    } catch (error) {
-      console.log(error)
-    }
-  }
-
-  fetchMessages()
+  
+  // const fetchMessages = async () => {
+ 
 
   const fetchUsers = async () => {
     try {
@@ -80,19 +71,48 @@ const Home = () => {
   }
 }, [])
 
-  // SEND MESSAGE
-  const sendMessage = () => {
-    if (!message.trim()) return
+  useEffect(() => {
+  if (!selectedUser) return;
 
-    const messageData = {
-      sender: user.name,
-      text: message,
+  const fetchConversation = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/messages/${selectedUser._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+
+      setMessages(response.data);
+    } catch (error) {
+      console.log(error);
     }
+  };
 
-    socket.emit("send_message", messageData)
+  fetchConversation();
+}, [selectedUser]);
 
-    setMessage("")
-  }
+
+//     useEffect(() => {
+//   console.log(selectedUser);
+// }, [selectedUser]);
+
+  // SEND MESSAGE
+ const sendMessage = () => {
+  if (!message.trim() || !selectedUser) return;
+
+  const messageData = {
+    sender: user._id,
+    receiver: selectedUser._id,
+    text: message,
+  };
+
+  socket.emit("send_message", messageData);
+
+  setMessage("");
+};
 
   return (
     <div className="max-w-2xl mx-auto mt-10 bg-white shadow-lg rounded-lg p-5">
@@ -108,9 +128,15 @@ const Home = () => {
   <div className="space-y-2">
     {users.map((chatUser) => (
       <div
-        key={chatUser._id}
-        className="flex items-center justify-between p-3 rounded cursor-pointer hover:bg-gray-100"
-      >
+  key={chatUser._id}
+  onClick={() => setSelectedUser(chatUser)}
+  className={`flex items-center justify-between p-3 rounded cursor-pointer transition ${
+    selectedUser?._id === chatUser._id
+      ? "bg-blue-100"
+      : "hover:bg-gray-100"
+  }`}
+>
+           
         <span className="font-medium">
           {chatUser.name}
         </span>
