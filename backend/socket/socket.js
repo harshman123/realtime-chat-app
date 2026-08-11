@@ -5,9 +5,9 @@ const { saveMessage } = require("../controllers/messageController");
 const initializeSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: "http://localhost:5173",
-      methods: ["GET", "POST"],
-    },
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    methods: ["GET", "POST"],
+},
   });
   const onlineUsers = new Map();
 
@@ -21,30 +21,30 @@ const initializeSocket = (server) => {
     });
 
     // send message
-    socket.on("send_message", async (data) => {
-      try {
-        const message = await saveMessage(data);
-    
-        // io.emit("receive_message", message);
+   socket.on("send_message", async (data) => {
+  try {
+    const receiverSocketId = onlineUsers.get(data.receiver);
 
-        const receiverSocketId = onlineUsers.get(data.receiver);
-        const senderSocketId = onlineUsers.get(data.sender);
+    // Receiver online?
+    data.delivered = !!receiverSocketId;
 
-        // Send to receiver
-        if (receiverSocketId) {
-          io.to(receiverSocketId).emit("receive_message", message);
-        }
+    const message = await saveMessage(data);
 
-        // Send back to sender
-        if (senderSocketId) {
-          io.to(senderSocketId).emit("receive_message", message);
-        } 
+    const senderSocketId = onlineUsers.get(data.sender);
 
+    // Receiver
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("receive_message", message);
+    }
 
-      } catch (error) {
-        console.error("Message Error:", error);
-      }
-    });
+    // Sender
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("receive_message", message);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+});
     // disconnect
     socket.on("disconnect", () => {
       console.log("User Disconnected:", socket.id);

@@ -31,11 +31,12 @@ const getConversation = async (req, res) => {
 
 
 const saveMessage = async (data) => {
-    const message = await Message.create({
-        sender: data.sender,
-        receiver: data.receiver,
-        text: data.text,
-    });
+   const message = await Message.create({
+    sender: data.sender,
+    receiver: data.receiver,
+    text: data.text,
+    delivered: data.delivered,
+  });
     return message;
 };
 module.exports = {
