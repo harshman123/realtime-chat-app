@@ -1,50 +1,50 @@
-import axios from "axios"
+import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL
+const API_URL = import.meta.env.VITE_API_URL;
 
 // REGISTER USER
 const register = async (userData) => {
   const response = await axios.post(
-    `${API_URL}/register`,
+    `${API_URL}/api/auth/register`,
     userData
-  )
+  );
 
   if (response.data) {
     localStorage.setItem(
       "user",
       JSON.stringify(response.data)
-    )
+    );
   }
 
-  return response.data
-}
+  return response.data;
+};
 
 // LOGIN USER
 const login = async (userData) => {
   const response = await axios.post(
-    `${API_URL}/login`,
+    `${API_URL}/api/auth/login`,
     userData
-  )
+  );
 
   if (response.data) {
     localStorage.setItem(
       "user",
       JSON.stringify(response.data)
-    )
+    );
   }
 
-  return response.data
-}
+  return response.data;
+};
 
 // LOGOUT USER
 const logout = () => {
-  localStorage.removeItem("user")
-}
+  localStorage.removeItem("user");
+};
 
 const authService = {
   register,
   login,
   logout,
-}
+};
 
-export default authService
+export default authService;
