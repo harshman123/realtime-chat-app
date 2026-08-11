@@ -29,13 +29,13 @@ const Home = () => {
   const fetchUsers = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/api/auth/users",
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        }
-      );
+  `${import.meta.env.VITE_API_URL}/api/auth/users`,
+  {
+    headers: {
+      Authorization: `Bearer ${user.token}`,
+    },
+  }
+);
   
       setUsers(response.data);
     } catch (error) {
@@ -77,7 +77,7 @@ const Home = () => {
   const fetchConversation = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/messages/${selectedUser._id}`,
+        `${import.meta.env.VITE_API_URL}/api/messages/${selectedUser._id}`,
         {
           headers: {
             Authorization: `Bearer ${user.token}`,
